@@ -35,21 +35,6 @@
 		<cfabort/>
 	</cffunction>
 
-	<cffunction name="testAddJars">
-		<cfargument name="uninstall" default="true">
-		<cfscript>
-			var error = structNew();
-			var path = expandPath("/#variables.extensionTag#/lib/");
-			var config = variables.defaultconfig;
-			var result = variables.Install.addJars(error,path,config);
-	//		debug(result);
-//			assertEquals(true,result.status,result.message);
-			if(uninstall) {
-				testRemoveJars();
-			}
-		</cfscript>
-	</cffunction>
-
 	<cffunction name="testInstall" access="private">
 		<cfargument name="config" required="true">
 		<cfargument name="uninstall" default="true">
@@ -165,8 +150,6 @@
 		<cfscript>
 			var error = structNew();
 			var config = variables.defaultconfig;
-			testAddJars(uninstall);
-			var config = variables.defaultconfig;
 			try {
 				var result = variables.Install.addCustomTagsMapping("#expandPath("/"&variables.extensionTag)#/src/tag");
 			} catch (any e) {
@@ -185,15 +168,6 @@
 			var path = "zip://" & expandPath("#variables.extensionzip#!");
 			var config = variables.defaultconfig;
 			var result = variables.Install.removeCustomTagsMapping("#expandPath("/"&variables.extensionTag)#/src/tag");
-		</cfscript>
-	</cffunction>
-
-	<cffunction name="testRemoveJars" access="private">
-		<cfscript>
-			var error = structNew();
-			var path = expandPath("/#variables.extensionTag#/lib/");
-			var config = variables.defaultconfig;
-			var result = variables.Install.removeJars(error,path,config);
 		</cfscript>
 	</cffunction>
 

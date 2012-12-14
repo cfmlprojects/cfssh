@@ -1,0 +1,10 @@
+<project name="distro.build" default="build" basedir="./" xmlns:antcontrib="antlib:net.sf.antcontrib">
+
+	<loadproperties srcfile="build.properties"/>
+	<import file="${cfdistro.build.file}"/>
+
+	<target name="build" depends="cfdistro.build">
+		<mapping physical="${basedir}/../tests" virtual="/tests"/>
+	</target>	
+	
+</project>

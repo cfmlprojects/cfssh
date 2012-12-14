@@ -2,7 +2,7 @@
 
 	<cfscript>
 		instance = StructNew();
-		instance.static.uuid = "erken-AD609OIS-0AEB-B46A-0D1E1EC5F3CD7D9D";
+		instance.static.uuid = "ssh-AD609OIS-0AEB-B46A-0D1E1EC5F3CD7D9D";
 		instance.initialized = false;
 		instance.useClassloader = true;  // try to load from classpath first
 	</cfscript>

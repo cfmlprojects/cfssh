@@ -1,7 +1,4 @@
 component {
-	/**
-	 * http://remark.overzealous.com/manual/usage.html
-	 **/
 	function init() {
    		classLoader = new LibraryLoader(getDirectoryFromPath(getMetaData(this).path) & "lib/").init();
 /*
@@ -22,126 +19,147 @@ component {
 
 	function shell(required username , required password , required host , numeric port=22, required string userinput)  {
 			var results = "";
+			var System = classLoader.create("java.lang.System");
 			var errStream = classLoader.create("java.io.ByteArrayOutputStream").init();
 			var outStream = classLoader.create("java.io.ByteArrayOutputStream").init();
 			var jsch = classLoader.create("com.jcraft.jsch.JSch").init();
 			var config = classLoader.create("java.util.Properties");
 			config.put("StrictHostKeyChecking", "no");
-			var jschSession = jsch.getSession(username, host, 22);
+			var jschSession = jsch.getSession(username, host, port);
 			//arguments.userinput = arguments.userinput.replaceAll("\\\\r?\\\\n", "\\\\n");
-			arguments.userinput = arguments.userinput.replaceAll("\\\\s*\\\\r?\\\\n\\\\s*", "\\\\n").trim();
+			arguments.userinput = arguments.userinput.replaceAll("#chr(13)##chr(10)#", chr(10)).trim();
 			var x = 0;
-			if(listLen(userinput,"\\n") gt 0){
-			    for(x=1; x lte listLen(userinput,"\\n"); x ++) {
-			    	results = exec(username,password,host,port,listGetAt(userinput,x,"\\n"));
-			    }
-			    return results;
-			}
 			jschSession.setConfig(config);
 			jschSession.setPassword(password);
 			jschSession.connect();
 			var command = classLoader.create("java.io.ByteArrayInputStream").init(arguments.userinput.getBytes("UTF-8"));
 			var channel=jschSession.openChannel("shell");
 			channel.setInputStream(command);
-
 			channel.setOutputStream(outStream);
-
-			//FileOutputStream fos=new FileOutputStream("/tmp/stderr");
-			//((ChannelExec)channel).setErrStream(fos);
-			channel.setErrStream(errStream);
-
-			var in=channel.getInputStream();
-
+			channel.setExtOutputStream(errStream);
+			var inStream=channel.getInputStream();
 			channel.connect();
-
-			var thread = classLoader.create("java.lang.Thread");
 			var byteClass = classLoader.create( "java.lang.Byte");
 			byteClass.Init(1);
 			var tmp = classLoader.create("java.lang.reflect.Array").newInstance(byteClass.TYPE, 1024);
 
 			while(true){
-			  while(in.available()>0){
-			    i=in.read(tmp, 0, 1024);
+			  while(inStream.available()>0){
+			    i=inStream.read(tmp, 0, 1024);
 			    if(i<0)break;
 			    str = classLoader.create("java.lang.String").init(tmp,0,i);
 			    results = results & str;
-			    //System.out.print(new String(tmp, 0, i));
+			    //System.out.print(str);
 			  }
 			  if(channel.isClosed()){
 			   // System.out.println("exit-status: "+channel.getExitStatus());
 			    break;
 			  }
-			  try{Thread.sleep(1000);}
-			  catch(Exception ee){}
 			}
 
 			channel.disconnect();
 			jschSession.disconnect();
-			in.close();
-			return results & errStream.toString();
+			inStream.close();
+			errStream.close();
+			return results;
 	}
 
-	function exec(required username, required password, required host,numeric port=22, required string userinput)  {
+	function exec(required username, required password, required host,numeric port=22, timeout=10000, required string userinput)  {
+
 			var results = [];
+			var System = classLoader.create("java.lang.System");
 			var errStream = classLoader.create("java.io.ByteArrayOutputStream").init();
 			var jsch = classLoader.create("com.jcraft.jsch.JSch").init();
 			var config = classLoader.create("java.util.Properties");
 			config.put("StrictHostKeyChecking", "no");
 			var jschSession=jsch.getSession(username, host, port);
-			//arguments.userinput = arguments.userinput.replaceAll("\\\\r?\\\\n", "\\\\n");
-			arguments.userinput = arguments.userinput.replaceAll("\\s*\\r?\\n\\s*", "\\n").trim();
+			arguments.userinput = arguments.userinput.replaceAll("#chr(13)##chr(10)#", chr(10)).trim();
 			jschSession.setConfig(config);
 			jschSession.setPassword(password);
 			//addDebugMessage("Connecting to #host# as #username#...");
 			jschSession.connect();
+/*
+			var c = jschSession.openChannel("exec");
+			var oss = c.getOutputStream();
+			var iss = c.getInputStream();
+			c.setCommand("scp .");
+			c.connect();
+			request.debug(iss.read());
+			c.disconnect();
+			throw ("");
+*/
+
 			var x = 0;
-		    for(x=1; x lte listLen(userinput,chr(13)&chr(10)); x ++) {
+		    for(x=1; x lte listLen(userinput,chr(10)); x ++) {
+		    	var exitstatus = 0;
 				var channel=jschSession.openChannel("exec");
-				var command=listGetAt(arguments.userinput,x,chr(13)&chr(10));
-				channel.setCommand(command);
+				var command=listGetAt(arguments.userinput,x,chr(10));
+				//System.out.println("command:" & command);
 				//addDebugMessage("Running command:" & command);
 				// X Forwarding
 				// channel.setXForwarding(true);
-
 				//channel.setInputStream(System.in);
-				channel.setInputStream(javaCast("null",""));
-
-				//channel.setOutputStream(outStream);
-
-				//FileOutputStream fos=new FileOutputStream("/tmp/stderr");
-				//((ChannelExec)channel).setErrStream(fos);
-				channel.setErrStream(errStream);
-
-				var in=channel.getInputStream();
-
+				//channel.setInputStream(javaCast("null",""));
+				var outStream = channel.getOutputStream();
+				//channel.setExtOutputStream(errStream);
+				var inStream=channel.getInputStream();
+				//System.out.println("connecting...");
+				channel.setCommand(command);
 				channel.connect();
-
-				var thread = classLoader.create("java.lang.Thread");
-				var byteClass = classLoader.create( "java.lang.Byte");
+        		//system.out.println(readLine(inStream));
+				var byteClass = classLoader.create("java.lang.Byte");
 				byteClass.Init(1);
 				var tmp = classLoader.create("java.lang.reflect.Array").newInstance(byteClass.TYPE, 1024);
-
-				while(true){
-				  while(in.available()>0){
-				    i=in.read(tmp, 0, 1024);
-				    if(i<0)break;
-				    str = classLoader.create("java.lang.String").init(tmp,0,i);
-				    arrayAppend(results, str & errStream.toString());
-				    //System.out.print(new String(tmp, 0, i));
-				  }
-				  if(channel.isClosed()){
-				   // System.out.println("exit-status: "+channel.getExitStatus());
-				    break;
-				  }
-				  thread.sleep(1000);
+				//System.out.println("waiting...");
+				var tickBegin = GetTickCount();
+				var beenRunin = 0;
+				var commandresult = classLoader.create("java.io.ByteArrayOutputStream").init();
+				while (beenRunin < timeout) {
+					tickend = GetTickCount();
+					beenRunin = (tickEnd - tickBegin);
+					while (inStream.available() > 0) {
+						i = inStream.read(tmp, 0, 1024);
+						if (i < 0) break;
+						str = classLoader.create("java.lang.String").init(tmp, 0, i);
+						commandresult.write(tmp);
+					}
+					if (channel.isClosed()) {
+						exitstatus = channel.getExitStatus();
+						break;
+					}
 				}
-
+				//System.out.println("disconnecting!");
 				channel.disconnect();
 		    }
+		    commandresult = commandresult.toString().trim();
 			jschSession.disconnect();
-			in.close();
+			inStream.close();
+			errStream.close();
+			if(beenRunin >= timeout) {
+				throw(type="sshd.exec.error",message="request timed out!");
+			}
+			if(exitstatus != 0) {
+				throw(type="sshd.exec.error",message="Error! Exit code:#exitstatus# message: #commandresult# (#command#)");
+			}
+		    arrayAppend(results,commandresult);
 			return results;
 	}
+
+    private String function readLine(instream) {
+		var ByteArrayOutputStream = classLoader.create("java.io.ByteArrayOutputStream");
+        var baos = ByteArrayOutputStream.init();
+        for (;;) {
+            var c = instream.read();
+            if (c == '\n') {
+                return baos.toString();
+            } else if (c == -1) {
+                throw("End of stream");
+            } else {
+                baos.write(c);
+            }
+        }
+    }
+
 
 	function preg_match(regex,str) {
 	    var results = arraynew(1);
@@ -200,15 +218,24 @@ component {
         	querySetCell(entries,"attributes",attrs.getPermissionsString(),row);
         }
 		channel.disconnect();
+        sleep(500); // give it a half second to realize we're exiting
 		jschSession.disconnect();
 		return entries;
     }
 
-	function putFile(required localFile, required username, required password, required host,numeric port=22, remoteDirectory="")  {
+
+	function putFile(required localFile, required username, required password, required host,numeric port=22, remoteDirectory="", filename="")  {
+		var System = classLoader.create("java.lang.System");
         var localFile = classLoader.create("java.io.File").init(localFile);
-        var filename = localFile.getName();
+        if(filename == "") {
+        	filename = localFile.getName();
+        }
 		var jsch = classLoader.create("com.jcraft.jsch.JSch").init();
 		var config = classLoader.create("java.util.Properties");
+
+		var ChannelSftp = classLoader.create("com.jcraft.jsch.ChannelSftp");
+		var mode = ChannelSftp.OVERWRITE;
+
 		config.put("StrictHostKeyChecking", "no");
 		var jschSession=jsch.getSession(username, host, port);
 		jschSession.setConfig(config);
@@ -219,10 +246,13 @@ component {
         if(remoteDirectory != "") {
 	        channel.cd(remoteDirectory);
         }
-        channel.put(classLoader.create("java.io.FileInputStream").init(localFile), filename);
+        channel.put(classLoader.create("java.io.FileInputStream").init(localFile), filename, mode);
+        channel.quit();
+        var exitstatus = channel.getExitStatus();
         channel.disconnect();
+        sleep(500); // give it a half second to realize we're exiting
 		jschSession.disconnect();
-		return true;
+		return exitstatus;
     }
 
 	function getFile(required remoteFile, required localFile, required username, required password, required host,numeric port=22, remoteDirectory="")  {
@@ -240,9 +270,12 @@ component {
 	        channel.cd(remoteDirectory);
         }
         channel.get(remoteFile,localFile);
+        var exitstatus = channel.getExitStatus();
+        channel.exit();
         channel.disconnect();
+        sleep(500); // give it a half second to realize we're exiting
 		jschSession.disconnect();
-		return true;
+		return exitstatus;
     }
 
 
