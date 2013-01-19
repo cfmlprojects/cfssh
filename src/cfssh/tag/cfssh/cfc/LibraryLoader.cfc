@@ -73,7 +73,6 @@
 				</cfloop>
 			</cfif>
 		</cfloop>
-		<cfset request.debug(qpaths) />
 
 		<cfreturn qpaths />
 	</cffunction>

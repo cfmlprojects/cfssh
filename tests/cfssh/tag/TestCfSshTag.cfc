@@ -52,7 +52,6 @@
 ls -al
 ls -al
 ls -al</sh:ssh>
-			<cfset request.debug(ssh) />
 			<cfset assertTrue(findNoCase("total",ssh))/>
 	</cffunction>
 
@@ -68,6 +67,57 @@ ls -al</sh:ssh>
 			username="#username#" password="#password#" host="#host#"
 			port="#port#" timeout="#timeout#" />
 		<cfset debug(ssh) />
+	</cffunction>
+
+	<cffunction name="testKeyAuth">
+		<cfscript>
+			var host="127.0.0.1";
+			var port="2022";
+			var timeout="3";
+			var username="testuser";
+			var key=expandPath("/tests/data/testuser.key");
+			var passphrase="testuser"
+		</cfscript>
+		<sh:ssh action="listdir"
+			username="#username#" key="#key#" passphrase="#passphrase#" host="#host#"
+			port="#port#" timeout="#timeout#" />
+		<cfset debug(ssh) />
+	</cffunction>
+
+	<cffunction name="testFingerprint">
+		<cfscript>
+			var host="127.0.0.1";
+			var port="2022";
+			var timeout="3";
+			var username="testuser";
+			var key=expandPath("/tests/data/testuser.key");
+			var passphrase="testuser"
+			var fingerprint ="04:d5:e2:c4:99:3d:7e:56:e4:d2:7a:69:c9:61:d6:c2"
+		</cfscript>
+		<sh:ssh action="listdir"
+			username="#username#" key="#key#" passphrase="#passphrase#" host="#host#"
+			port="#port#" timeout="#timeout#" fingerprint="#fingerprint#"/>
+		<cfset debug(ssh) />
+	</cffunction>
+
+	<cffunction name="testFingerprintFail">
+		<cfscript>
+			var host="127.0.0.1";
+			var port="2022";
+			var timeout="3";
+			var username="testuser";
+			var key=expandPath("/tests/data/testuser.key");
+			var passphrase="testuser"
+			var fingerprint ="02:d5:e2:c4:99:3d:7e:56:e4:d2:7a:69:c9:61:d6:c2"
+		</cfscript>
+		<cftry>
+			<sh:ssh action="listdir"
+				username="#username#" key="#key#" passphrase="#passphrase#" host="#host#"
+				port="#port#" timeout="#timeout#" fingerprint="#fingerprint#"/>
+			<cfset fail("incorrect fingerprint should have failed") />
+			<cfcatch>
+			</cfcatch>
+		</cftry>
 	</cffunction>
 
 	<cffunction name="testPutFile">

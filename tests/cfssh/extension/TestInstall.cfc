@@ -4,7 +4,7 @@
   <cffunction name="setUp" returntype="void" access="public">
 		<cfset variables.extensionTag = "cfssh" />
  		<cfset variables.Install = createObject("component","#variables.extensionTag#.extension.Install") />
-		<cfdirectory action="list" directory="/#variables.extensionTag#/../../dist/" name="files" sort="desc" />
+		<cfdirectory action="list" directory="/#variables.extensionTag#/../../dist/" name="files" sort="desc" filter="*.zip"/>
 		<cfset variables.extensionzip = "/#variables.extensionTag#/../../dist/#files.name[1]#" />
 		<cfset variables.defaultconfig = {"mixed":{"isBuiltInTag":true,"installTestPlugin":true}} />
 		<cfset request.adminType = "web" />
@@ -45,7 +45,7 @@
 			var libraryPath = expandPath('{railo-#request.adminType#}/library');
 			var result = variables.Install.install(error,path,config);
 			if(config.mixed.isBuiltInTag) {
-				request.debug("#libraryPath#/tag/#variables.extensionTag#/cfc/#rereplace(variables.extensionTag,'^cf','')#.cfc");
+				//request.debug("#libraryPath#/tag/#variables.extensionTag#/cfc/#rereplace(variables.extensionTag,'^cf','')#.cfc");
 				assertTrue(fileExists("#libraryPath#/tag/#variables.extensionTag#/cfc/#rereplace(variables.extensionTag,'^cf','')#.cfc"));
 			} else {
 				assertTrue(fileExists("#libraryPath#/../customtags/#variables.extensionTag#/cfc/#rereplace(variables.extensionTag,'^cf','')#.cfc"));
