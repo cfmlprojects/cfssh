@@ -30,7 +30,14 @@ component {
 			arguments.userinput = arguments.userinput.replaceAll("#chr(13)##chr(10)#", chr(10)).trim();
 			var x = 0;
 			jschSession.setConfig(config);
-			jschSession.setPassword(password);
+			
+			// key authentication
+			if(StructKeyExists(arguments, "key") && arguments.key != ""){
+				jsch.addIdentity(arguments.key, password);
+			} else {
+				jschSession.setPassword(password);	
+			}
+			
 			jschSession.connect();
 			var command = classLoader.create("java.io.ByteArrayInputStream").init(arguments.userinput.getBytes("UTF-8"));
 			var channel=jschSession.openChannel("shell");
@@ -75,7 +82,14 @@ component {
 			var jschSession=jsch.getSession(username, host, port);
 			arguments.userinput = arguments.userinput.replaceAll("#chr(13)##chr(10)#", chr(10)).trim();
 			jschSession.setConfig(config);
-			jschSession.setPassword(password);
+			
+			// key authentication
+			if(StructKeyExists(arguments, "key") && arguments.key != ""){
+				jsch.addIdentity(arguments.key, password);
+			} else {
+				jschSession.setPassword(password);	
+			}
+			
 			//addDebugMessage("Connecting to #host# as #username#...");
 			jschSession.connect();
 /*
@@ -183,7 +197,12 @@ component {
 		config.put("StrictHostKeyChecking", "no");
 		var jschSession=jsch.getSession(username, host, port);
 		jschSession.setConfig(config);
-		jschSession.setPassword(password);
+		// key authentication
+		if(StructKeyExists(arguments, "key") && arguments.key != ""){
+			jsch.addIdentity(arguments.key, password);
+		} else {
+			jschSession.setPassword(password);	
+		}
 		jschSession.connect();
         var channel = jschSession.openChannel("sftp");
         channel.connect();
@@ -224,28 +243,38 @@ component {
     }
 
 
-	function putFile(required localFile, required username, required password, required host,numeric port=22, remoteDirectory="", filename="")  {
+	function putFile(required localFile, required username, required password, required host, numeric port=22, remoteDirectory="", filename="")  {
 		var System = classLoader.create("java.lang.System");
         var localFile = classLoader.create("java.io.File").init(localFile);
         if(filename == "") {
         	filename = localFile.getName();
         }
 		var jsch = classLoader.create("com.jcraft.jsch.JSch").init();
+		var jschSession = jsch.getSession(username, host, port);
 		var config = classLoader.create("java.util.Properties");
 
 		var ChannelSftp = classLoader.create("com.jcraft.jsch.ChannelSftp");
 		var mode = ChannelSftp.OVERWRITE;
-
+		
+		// key authentication
+		if(StructKeyExists(arguments, "key") && arguments.key != ""){
+			jsch.addIdentity(arguments.key, password);
+		} else {
+			jschSession.setPassword(password);	
+		}
+		
 		config.put("StrictHostKeyChecking", "no");
-		var jschSession=jsch.getSession(username, host, port);
 		jschSession.setConfig(config);
-		jschSession.setPassword(password);
+		
 		jschSession.connect();
+
         channel = jschSession.openChannel("sftp");
         channel.connect();
-        if(remoteDirectory != "") {
-	        channel.cd(remoteDirectory);
+
+        if(arguments.remoteDirectory != "") {
+	        channel.cd(arguments.remoteDirectory);
         }
+
         channel.put(classLoader.create("java.io.FileInputStream").init(localFile), filename, mode);
         channel.quit();
         var exitstatus = channel.getExitStatus();
@@ -262,7 +291,14 @@ component {
 		config.put("StrictHostKeyChecking", "no");
 		var jschSession=jsch.getSession(username, host, port);
 		jschSession.setConfig(config);
-		jschSession.setPassword(password);
+		
+		// key authentication
+		if(StructKeyExists(arguments, "key") && arguments.key != ""){
+			jsch.addIdentity(arguments.key, password);
+		} else {
+			jschSession.setPassword(password);	
+		}
+		
 		jschSession.connect();
         channel = jschSession.openChannel("sftp");
         channel.connect();
