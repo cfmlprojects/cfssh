@@ -242,7 +242,7 @@ component {
 	        	var file = files.next();
 	        	var attrs = file.getAttrs();
 	        	//var reged = preg_match("([drwx-]+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+\s\d+\s[\d|\:]+)\s+(\S+)",file.getLongname());
-	        	var reged = preg_match("([drwx-]+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\d+).*",file.getLongname());
+	        	var reged = preg_match("([drwxt-]+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\d+).*",file.getLongname());
 	        	querySetCell(entries,"name",file.getFilename(),row);
 	        	querySetCell(entries,"path",remotedir & "/" & file.getFilename(),row);
 	        	querySetCell(entries,"url",file.getFilename(),row);
@@ -351,6 +351,77 @@ component {
 		}
 		return exitstatus;
     }
+
+	function delete(required username, password="", key="", passphrase="", required host, numeric port=22, numeric timeout=30, fingerprint="", required item)  {
+		var jschSession = getSession(argumentCollection = arguments);
+		var err = "";
+		try {
+	        channel = jschSession.openChannel("sftp");
+	        channel.connect();
+	        channel.rm(item);
+	        var exitstatus = channel.getExitStatus();
+	        channel.exit();
+		}
+		catch (any ex) {
+			err = ex;
+		}
+		finally {
+			try {
+				channel.disconnect();
+        		sleep(500); // give it a half second to realize we're exiting
+			} catch (any e) {}
+			try {
+				jschSession.disconnect();
+			} catch (any e) {}
+		}
+		if(isStruct(err)) {
+			throw(err);
+		}
+		return exitstatus;
+    }
+
+	function exists(required username, password="", key="", passphrase="", required host, numeric port=22, numeric timeout=30, fingerprint="", required item)  {
+		var jschSession = getSession(argumentCollection = arguments);
+		var err = "";
+		var exitstatus = "";
+		var files = [];
+		try {
+	        channel = jschSession.openChannel("sftp");
+	        channel.connect();
+	        var remotedir = channel.pwd();
+	        files = channel.ls(item);
+	        exitstatus = (channel.getExitStatus() == -1) ? true : false;
+	        channel.exit();
+		}
+		catch (Any ex) {
+			if(ex.message == item) {
+				exitstatus = false;
+			} else {
+				err = ex;
+			}
+		}
+		finally {
+			try {
+				channel.disconnect();
+        		sleep(500); // give it a half second to realize we're exiting
+			} catch (any e) {}
+			try {
+				jschSession.disconnect();
+			} catch (any e) {}
+		}
+		if(isStruct(err)) {
+			throw(err);
+		}
+		return exitstatus;
+    }
+
+	function remove(required username, password="", key="", passphrase="", required host, numeric port=22, numeric timeout=30, fingerprint="", required item)  {
+		delete(argumentCollection=arguments);
+	}
+
+	function removeDir(required username, password="", key="", passphrase="", required host, numeric port=22, numeric timeout=30, fingerprint="", required item)  {
+		delete(argumentCollection=arguments);
+	}
 
 	function convertUnixTimestamp(input) {
 		return lsDateTimeFormat(

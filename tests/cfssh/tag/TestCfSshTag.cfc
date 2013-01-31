@@ -137,6 +137,54 @@ ls -al</sh:ssh>
 		<cfset debug(ssh) />
 	</cffunction>
 
+	<cffunction name="testDeleteFile">
+		<cffile action="write" file="#workdir#/testput.txt" output="this is a test!" />
+		<cfscript>
+			var host="127.0.0.1";
+			var port="2022";
+			var timeout="3";
+			var username="testuser";
+			var password="testuser";
+		</cfscript>
+		<sh:ssh action="putFile" localFile="#workdir#/testput.txt"
+			filename="putted.txt" remotedirectory="#workdir#"
+			username="#username#" password="#password#" host="#host#"
+			port="#port#" timeout="#timeout#" />
+		<cfset assertEquals(fileRead("#workdir#/testput.txt"),fileRead("#workdir#/putted.txt")) />
+		<sh:ssh action="delete" item="#workdir#/putted.txt"
+			username="#username#" password="#password#" host="#host#"
+			port="#port#" timeout="#timeout#" />
+		<cfset assertEquals(false,fileExists("#workdir#/putted.txt")) />
+	</cffunction>
+
+	<cffunction name="testExists">
+		<cffile action="write" file="#workdir#/testput.txt" output="this is a test!" />
+		<cfscript>
+			var host="127.0.0.1";
+			var port="2022";
+			var timeout="3";
+			var username="testuser";
+			var password="testuser";
+			var exists=false;
+		</cfscript>
+		<sh:ssh action="putFile" localFile="#workdir#/testput.txt"
+			filename="putted.txt" remotedirectory="#workdir#"
+			username="#username#" password="#password#" host="#host#"
+			port="#port#" timeout="#timeout#" />
+		<cfset assertEquals(fileRead("#workdir#/testput.txt"),fileRead("#workdir#/putted.txt")) />
+		<sh:ssh action="exists" item="#workdir#/testput.txt" name="exists"
+			username="#username#" password="#password#" host="#host#"
+			port="#port#" timeout="#timeout#" />
+		<cfset assertEquals(true,exists) />
+		<sh:ssh action="delete" item="#workdir#/testput.txt"
+			username="#username#" password="#password#" host="#host#"
+			port="#port#" timeout="#timeout#" />
+		<sh:ssh action="exists" item="#workdir#/testput.txt" name="exists"
+			username="#username#" password="#password#" host="#host#"
+			port="#port#" timeout="#timeout#" />
+		<cfset assertEquals(false,exists) />
+	</cffunction>
+
 	<cffunction name="testGetFile">
 		<cfscript>
 			var host="127.0.0.1";
